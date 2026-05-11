@@ -18,20 +18,20 @@ For the **skill content** (SKILL.md files), see [`@framers/agentos-skills`](http
 
 ## Ecosystem
 
-| Package                            | Role                                                  |
-| ---------------------------------- | ----------------------------------------------------- |
-| `@framers/agentos-skills`          | Content -- 88 SKILL.md files + registry.json          |
-| `@framers/agentos-skills-registry` | Catalog SDK -- query helpers, lazy loaders, factories |
-| `@framers/agentos`                 | Engine -- SkillLoader, SkillRegistry, SkillSnapshot   |
+| Package | Role |
+| --- | --- |
+| [`@framers/agentos-skills`](https://github.com/framersai/agentos-skills) | Content — 88 [SKILL.md files](https://github.com/framersai/agentos-skills/tree/master/registry/curated) + [registry.json](https://github.com/framersai/agentos-skills/blob/master/registry.json) |
+| [`@framers/agentos-skills-registry`](https://github.com/framersai/agentos-skills-registry) | Catalog SDK — query helpers, lazy loaders, factories |
+| [`@framers/agentos`](https://github.com/framersai/agentos/tree/master/src/cognition/skills) | Engine — [SkillLoader](https://github.com/framersai/agentos/blob/master/src/cognition/skills/SkillLoader.ts), [SkillRegistry](https://github.com/framersai/agentos/blob/master/src/cognition/skills/SkillRegistry.ts), SkillSnapshot |
 
 > This layout mirrors the extensions ecosystem:
-> `@framers/agentos-extensions` (content) + `@framers/agentos-extensions-registry` (SDK).
+> [`@framers/agentos-extensions`](https://github.com/framersai/agentos-extensions) (content) + [`@framers/agentos-extensions-registry`](https://github.com/framersai/agentos-extensions-registry) (SDK).
 
-| Package                              | Role            | What                                                   | Runtime Code | Dependencies             |
-| ------------------------------------ | --------------- | ------------------------------------------------------ | :----------: | ------------------------ |
-| **@framers/agentos/skills**          | **Engine**      | SkillLoader, SkillRegistry, path utils                 |     Yes      | `yaml`                   |
-| **@framers/agentos-skills**          | **Content**     | 88 SKILL.md files + registry.json index                |      No      | None                     |
-| **@framers/agentos-skills-registry** | **Catalog SDK** | SKILLS_CATALOG, query helpers, lazy loaders, factories |     Yes      | `agentos-skills`, `yaml` |
+| Package | Role | What | Runtime Code | Dependencies |
+| --- | --- | --- | :---: | --- |
+| [**@framers/agentos/skills**](https://github.com/framersai/agentos/tree/master/src/cognition/skills) | **Engine** | [SkillLoader](https://github.com/framersai/agentos/blob/master/src/cognition/skills/SkillLoader.ts), [SkillRegistry](https://github.com/framersai/agentos/blob/master/src/cognition/skills/SkillRegistry.ts), [path utils](https://github.com/framersai/agentos/blob/master/src/cognition/skills/paths.ts) | Yes | `yaml` |
+| [**@framers/agentos-skills**](https://github.com/framersai/agentos-skills) | **Content** | 88 [SKILL.md files](https://github.com/framersai/agentos-skills/tree/master/registry/curated) + [registry.json](https://github.com/framersai/agentos-skills/blob/master/registry.json) index | No | None |
+| [**@framers/agentos-skills-registry**](https://github.com/framersai/agentos-skills-registry) | **Catalog SDK** | SKILLS_CATALOG, query helpers, lazy loaders, factories | Yes | `agentos-skills`, `yaml` |
 
 ## Quick Start
 
