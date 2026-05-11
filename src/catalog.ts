@@ -8,7 +8,7 @@
  *
  * **Ecosystem layout** (mirrors extensions):
  * ```
- * @framers/agentos/skills               ← Engine (SkillLoader, SkillRegistry)
+ * @framers/agentos/cognition/skills     ← Engine (SkillLoader, SkillRegistry)
  * @framers/agentos-skills               ← Content (88 SKILL.md files + registry.json)
  * @framers/agentos-skills-registry      ← Catalog SDK (this package)
  * ```
@@ -171,7 +171,7 @@ async function getSkillParser(): Promise<NonNullable<typeof _skillLoaderMod>> {
   if (_skillLoaderMod) return _skillLoaderMod;
 
   try {
-    const mod = await import('@framers/agentos/skills');
+    const mod = await import('@framers/agentos/cognition/skills');
     _skillLoaderMod = {
       parseSkillFrontmatter: (mod as any).parseSkillFrontmatter,
       extractMetadata: (mod as any).extractMetadata,

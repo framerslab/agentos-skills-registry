@@ -7,7 +7,7 @@
  *
  * **Ecosystem layout** (mirrors extensions):
  * ```
- * @framers/agentos/skills               ← Engine (SkillLoader, SkillRegistry)
+ * @framers/agentos/cognition/skills     ← Engine (SkillLoader, SkillRegistry)
  * @framers/agentos-skills               ← Content (88 SKILL.md files + registry.json)
  * @framers/agentos-skills-registry      ← Catalog SDK (this package)
  * ```
@@ -29,10 +29,10 @@ import { createRequire } from 'node:module';
 
 // ── Local mirror types (avoid eager import of @framers/agentos) ─────────────
 // These are structurally compatible with the canonical types from
-// `@framers/agentos/skills`.  Consumers who depend on the peer dep can simply
+// `@framers/agentos/cognition/skills`.  Consumers who depend on the peer dep can simply
 // cast or use the canonical imports.
 
-/** @see SkillSnapshot in @framers/agentos/skills */
+/** @see SkillSnapshot in @framers/agentos/cognition/skills */
 export interface SkillSnapshot {
   prompt: string;
   skills: Array<{ name: string; primaryEnv?: string }>;
@@ -41,7 +41,7 @@ export interface SkillSnapshot {
   createdAt: Date;
 }
 
-/** @see SkillsConfig in @framers/agentos/skills */
+/** @see SkillsConfig in @framers/agentos/cognition/skills */
 export interface SkillsConfig {
   allowBundled?: string[];
   load?: { extraDirs?: string[]; watch?: boolean; watchDebounceMs?: number };
@@ -57,7 +57,7 @@ export interface SkillsConfig {
   >;
 }
 
-/** @see SkillEligibilityContext in @framers/agentos/skills */
+/** @see SkillEligibilityContext in @framers/agentos/cognition/skills */
 export interface SkillEligibilityContext {
   platforms: string[];
   hasBin: (bin: string) => boolean;
@@ -148,7 +148,7 @@ async function requireAgentOS(): Promise<NonNullable<typeof _agentosSkillsMod>> 
 
   try {
     // Dynamic import — only resolved when a consumer calls a factory function.
-    const mod = await import('@framers/agentos/skills');
+    const mod = await import('@framers/agentos/cognition/skills');
     _agentosSkillsMod = mod as unknown as NonNullable<typeof _agentosSkillsMod>;
     return _agentosSkillsMod;
   } catch {
