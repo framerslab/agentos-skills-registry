@@ -146,4 +146,4 @@ const merged = mergeWithWorkspaceSkills(SKILLS_CATALOG, workspace);
 
 ## License
 
-Apache 2.0 — see [LICENSE](LICENSE).
+Apache 2.0 — see [LICENSE](https://github.com/framersai/agentos-skills-registry/blob/master/LICENSE).
