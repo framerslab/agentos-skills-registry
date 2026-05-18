@@ -5,7 +5,7 @@
     "dist",
     "README.md"
   ],
-  "description": "Catalog SDK for AgentOS skills \u2014 query helpers, lazy loaders, and factory functions for curated SKILL.md prompt modules. Companion to the @framers/agentos TypeScript AI agent runtime.",
+  "description": "Catalog SDK for AgentOS skills — query helpers, lazy loaders, and factory functions for curated SKILL.md prompt modules. Companion to the @framers/agentos TypeScript AI agent runtime.",
   "homepage": "https://agentos.sh",
   "bugs": {
     "url": "https://github.com/framersai/agentos-skills-registry/issues"
@@ -71,7 +71,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@framers/agentos-skills": "^1.0.0",
+    "@framers/agentos-skills": "^0.10.1",
     "yaml": "^2.8.1"
   },
   "peerDependencies": {
@@ -83,7 +83,7 @@
     }
   },
   "devDependencies": {
-    "@framers/agentos": "^0.9.7",
+    "@framers/agentos": "^0.9.16",
     "@types/node": "^20.12.12",
     "typescript": "^5.4.5",
     "vitest": "^1.0.0"
