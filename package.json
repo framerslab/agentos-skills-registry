@@ -33,6 +33,7 @@
     "./package.json": "./package.json"
   },
   "scripts": {
+    "prepare": "test -d dist || npm run build",
     "build": "tsc",
     "clean": "rm -rf dist",
     "prepublishOnly": "npm run build",
