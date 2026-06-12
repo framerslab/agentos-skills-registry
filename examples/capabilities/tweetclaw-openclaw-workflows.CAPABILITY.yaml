@@ -1,0 +1,29 @@
+# Example CAPABILITY.yaml - Skill type with external approval boundary
+# Copy to ~/.wunderland/capabilities/ or set WUNDERLAND_CAPABILITY_DIRS
+# The CapabilityManifestScanner will auto-discover and index this.
+
+id: custom:tweetclaw-openclaw-workflows
+kind: skill
+name: tweetclaw-openclaw-workflows
+displayName: TweetClaw OpenClaw Workflows
+description: >
+  Use when an agent needs approved X/Twitter automation through TweetClaw,
+  including scrape tweets, search tweets, search tweet replies, follower export,
+  user lookup, media upload or download, direct messages, monitor tweets,
+  webhooks, giveaway draws, and reviewed post or reply workflows.
+category: communication
+tags: [x, twitter, tweets, social-media, openclaw, agent-tools]
+requiredSecrets: [XQUIK_API_KEY]
+requiredTools: [tweetclaw]
+hasSideEffects: true
+inputSchema:
+  type: object
+  properties:
+    task:
+      type: string
+      description: The X/Twitter job to run after user approval
+    mode:
+      type: string
+      enum: [read, monitor, draft, publish]
+      default: read
+  required: [task]
