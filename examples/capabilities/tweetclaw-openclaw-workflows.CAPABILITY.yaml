@@ -10,7 +10,10 @@ description: >
   Use when an agent needs approved X/Twitter automation through TweetClaw,
   including scrape tweets, search tweets, search tweet replies, follower export,
   user lookup, media upload or download, direct messages, monitor tweets,
-  webhooks, giveaway draws, and reviewed post or reply workflows.
+  webhooks, giveaway draws, and reviewed post or reply workflows. Keep this
+  capability behind an explicit approval boundary for every mode because read
+  and monitor tasks still call external services, while draft and publish tasks
+  can prepare or perform account actions.
 category: communication
 tags: [x, twitter, tweets, social-media, openclaw, agent-tools]
 requiredSecrets: [XQUIK_API_KEY]
@@ -21,9 +24,15 @@ inputSchema:
   properties:
     task:
       type: string
-      description: The X/Twitter job to run after user approval
+      description: >
+        Describe the approved job, such as "search tweets about a launch",
+        "monitor replies for support", "draft a reply for review", or
+        "publish an approved campaign post".
     mode:
       type: string
+      description: >
+        Select read or monitor for data collection, draft for reviewed content
+        preparation, and publish only after explicit account-action approval.
       enum: [read, monitor, draft, publish]
       default: read
   required: [task]
