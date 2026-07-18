@@ -56,6 +56,7 @@ metadata:
 name: github-helper
 description: Workspace GitHub helper.
 category: developer-tools
+namespace: community
 tags: [github, workspace]
 requires_secrets: [github.token]
 requires_tools: [filesystem]
@@ -79,6 +80,7 @@ Use gh to manage repositories from the local workspace.
     expect(skills[0]?.name).toBe('github-helper');
     expect(skills[0]?.requiredSecrets).toEqual(['github.token']);
     expect(skills[0]?.requiredTools).toEqual(['filesystem']);
+    expect(skills[0]?.namespace).toBe('community');
 
     const loaded = await skills[0]!.loadSkill();
     expect(loaded.name).toBe('github-helper');
