@@ -56,6 +56,7 @@ metadata:
 name: github-helper
 description: Workspace GitHub helper.
 category: developer-tools
+namespace: community
 tags: [github, workspace]
 requires_secrets: [github.token]
 requires_tools: [filesystem]
@@ -79,6 +80,7 @@ Use gh to manage repositories from the local workspace.
     expect(skills[0]?.name).toBe('github-helper');
     expect(skills[0]?.requiredSecrets).toEqual(['github.token']);
     expect(skills[0]?.requiredTools).toEqual(['filesystem']);
+    expect(skills[0]?.namespace).toBe('community');
 
     const loaded = await skills[0]!.loadSkill();
     expect(loaded.name).toBe('github-helper');
@@ -87,5 +89,27 @@ Use gh to manage repositories from the local workspace.
     expect(loaded.metadata?.emoji).toBe('\u{1F419}');
     expect(loaded.metadata?.requires?.bins).toEqual(['gh']);
     expect(loaded.content).toContain('Use gh to manage repositories');
+  });
+
+  it('uses the default namespace when workspace frontmatter is blank', async () => {
+    const skillsDir = await createTempSkillsDir();
+    const skillDir = path.join(skillsDir, 'blank-namespace');
+    await fs.mkdir(skillDir, { recursive: true });
+    await fs.writeFile(
+      path.join(skillDir, 'SKILL.md'),
+      `---
+name: blank-namespace
+namespace: '   '
+---
+
+# Blank Namespace
+`,
+      'utf-8',
+    );
+
+    const skills = await discoverWorkspaceSkills({ skillsDir });
+
+    expect(skills).toHaveLength(1);
+    expect(skills[0]?.namespace).toBe('wunderland');
   });
 });

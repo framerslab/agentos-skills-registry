@@ -128,7 +128,7 @@ function frontmatterToEntry(
     requiredTools: fm.requires_tools ?? [],
     skillPath,
     source: 'community' as const,
-    namespace: 'wunderland',
+    namespace: fm.namespace?.trim() || 'wunderland',
     available: true,
     loadSkill: createAbsoluteSkillLoader(absoluteSkillMdPath, displayName),
   };
