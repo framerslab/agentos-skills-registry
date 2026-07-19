@@ -90,4 +90,26 @@ Use gh to manage repositories from the local workspace.
     expect(loaded.metadata?.requires?.bins).toEqual(['gh']);
     expect(loaded.content).toContain('Use gh to manage repositories');
   });
+
+  it('uses the default namespace when workspace frontmatter is blank', async () => {
+    const skillsDir = await createTempSkillsDir();
+    const skillDir = path.join(skillsDir, 'blank-namespace');
+    await fs.mkdir(skillDir, { recursive: true });
+    await fs.writeFile(
+      path.join(skillDir, 'SKILL.md'),
+      `---
+name: blank-namespace
+namespace: '   '
+---
+
+# Blank Namespace
+`,
+      'utf-8',
+    );
+
+    const skills = await discoverWorkspaceSkills({ skillsDir });
+
+    expect(skills).toHaveLength(1);
+    expect(skills[0]?.namespace).toBe('wunderland');
+  });
 });
