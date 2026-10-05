@@ -144,6 +144,17 @@ const merged = mergeWithWorkspaceSkills(SKILLS_CATALOG, workspace);
 - `mergeWithWorkspaceSkills(registry, workspace)` -- Merge with priority to workspace
 - `parseSkillFrontmatter(content)` -- Parse YAML frontmatter from skill content
 
+## Contributing and support
+
+| Guide | What |
+|---|---|
+| [Contributing](https://github.com/framerslab/agentos-skills-registry/blob/master/CONTRIBUTING.md) | Development setup, commit and pull request rules, review threads, contribution licensing |
+| [Release guide](https://github.com/framerslab/agentos-skills-registry/blob/master/RELEASING.md) | How a push to master becomes an npm release |
+| [Agent instructions](https://github.com/framerslab/agentos-skills-registry/blob/master/AGENTS.md) | Commands and conventions for coding agents |
+| [Code of Conduct](https://github.com/framerslab/agentos-skills-registry/blob/master/.github/CODE_OF_CONDUCT.md) | Community standards |
+| [Security Policy](https://github.com/framerslab/agentos-skills-registry/blob/master/.github/SECURITY.md) | Reporting vulnerabilities privately |
+| [Support](https://github.com/framerslab/agentos-skills-registry/blob/master/SUPPORT.md) | Where to get help |
+
 ## License
 
 Apache 2.0 — see [LICENSE](https://github.com/framerslab/agentos-skills-registry/blob/master/LICENSE).
