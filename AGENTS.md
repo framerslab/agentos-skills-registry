@@ -55,7 +55,7 @@ Available scripts that CI does not run: `pnpm run clean` (removes `dist`).
 
 ## Releases
 
-semantic-release evaluates every push to `master`. `feat` releases a minor; `fix`, `perf` and a revert commit release a patch; a breaking change releases a major, which takes this package to 1.0.0; `docs`, `chore`, `test`, `ci`, `build`, `style` and `refactor` release nothing. The release pushes a `v` tag and publishes to npm; it commits nothing, so never edit the `version` field to release, never create a `v` tag by hand and never run `npm publish`. Details: the [release guide](https://github.com/framerslab/agentos-skills-registry/blob/master/RELEASING.md).
+semantic-release evaluates every push to `master`, except a push whose head commit message contains `[skip ci]`. `feat` releases a minor; `fix`, `perf` and a revert commit release a patch; a breaking change releases a major, which takes this package to 1.0.0; `docs`, `chore`, `test`, `ci`, `build`, `style` and `refactor` release nothing. The release pushes a `v` tag and publishes to npm; it commits nothing, so never edit the `version` field to release, never create a `v` tag by hand and never run `npm publish`. Details: the [release guide](https://github.com/framerslab/agentos-skills-registry/blob/master/RELEASING.md).
 
 ## Automated review threads
 

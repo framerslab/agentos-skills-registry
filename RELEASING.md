@@ -51,4 +51,4 @@ The release workflow uses the `NPM_TOKEN` repository secret (an npm granular acc
 ## Troubleshooting
 
 - **No release published:** no commit since the last tag has a releasing type, or the build or a test failed before the release step.
-- **npm publish fails:** for example a 401 when the `NPM_TOKEN` secret has expired or lacks write access to `@framers`. semantic-release pushes the `v<version>` tag before it publishes, so that version is tagged on GitHub and missing from npm. Fix the cause; the next release publishes the following version, which includes those changes.
+- **npm publish fails:** for example a 401 when the `NPM_TOKEN` secret has expired or lacks write access to `@framers`. semantic-release pushes the `v<version>` tag before it publishes, so that version is tagged on GitHub and missing from npm, and it is not retried: the tag is the last release from then on. Fix the cause. The next releasing commit publishes the following version; that package contains the skipped version's changes, and its release notes list only the commits after the tag.
