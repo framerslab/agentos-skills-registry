@@ -81,7 +81,8 @@ for (const specifier of ${JSON.stringify(specifiers)}) {
     counts[specifier] = Object.keys(await import(specifier)).length;
   } catch (error) {
     counts[specifier] = -1;
-    console.error(specifier + ': ' + String(error && error.message).split('\\n')[0]);
+    // The whole stack: an entry point that throws while it initialises names its source line there.
+    console.error(specifier + ' failed to import:\\n' + String((error && error.stack) || error));
   }
 }
 console.log(JSON.stringify(counts));`;
