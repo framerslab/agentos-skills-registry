@@ -31,3 +31,6 @@ jobs:
 
       - name: Test
         run: pnpm test
+
+      - name: Install next to the latest agentos (npm checks the peer ranges)
+        run: pnpm run check:install
