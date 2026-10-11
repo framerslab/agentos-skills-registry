@@ -24,7 +24,8 @@ jobs:
           version: 10
       - uses: actions/setup-node@v5
         with:
-          node-version: '20'
+          # semantic-release 25 needs Node 22.14 or later.
+          node-version: '22'
           registry-url: 'https://registry.npmjs.org'
       - run: pnpm install --no-frozen-lockfile
       - run: pnpm build
