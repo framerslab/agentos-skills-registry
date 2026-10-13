@@ -100,6 +100,8 @@ const workspace = await discoverWorkspaceSkills();
 const merged = mergeWithWorkspaceSkills(SKILLS_CATALOG, workspace);
 ```
 
+Discovery does not follow symbolic links below the skills folder. A skill folder or a SKILL.md that is a link, or a SKILL.md that is not a regular file, is skipped with a warning, and each discovered skill's `loadSkill()` reads its file the same way.
+
 ## Sub-exports
 
 | Entry Point                                            | What                                                | Peer Deps                     |
@@ -140,7 +142,7 @@ const merged = mergeWithWorkspaceSkills(SKILLS_CATALOG, workspace);
 
 ### Workspace Discovery
 
-- `discoverWorkspaceSkills(options?)` -- Scan `.agents/skills/` for workspace-local skills
+- `discoverWorkspaceSkills(options?)` -- Scan `.agents/skills/` for workspace-local skills, without following symbolic links below it
 - `mergeWithWorkspaceSkills(registry, workspace)` -- Merge with priority to workspace
 - `parseSkillFrontmatter(content)` -- Parse YAML frontmatter from skill content
 

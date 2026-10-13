@@ -8,14 +8,22 @@
  *
  * Workspace skills take priority over registry skills when names collide.
  *
+ * A workspace skill is read only from a real folder directly below the skills
+ * directory and a SKILL.md in that folder that is a regular file. A symbolic
+ * link at either place, or a SKILL.md that is not a regular file, is skipped
+ * with a warning and never read, and the loader each discovered skill carries
+ * reads its SKILL.md the same way.
+ *
  * @module @framers/agentos-skills-registry/workspace-discovery
  */
 
-import * as fs from 'node:fs/promises';
+import fs from 'node:fs/promises';
+import { constants as fsConstants, type BigIntStats } from 'node:fs';
 import * as path from 'node:path';
 import YAML from 'yaml';
 import {
-  loadSkillFromAbsolutePath,
+  loadSkillFromContent,
+  type LoadedSkill,
   type LoadedSkillFrontmatter,
   type SkillCatalogEntry,
 } from './catalog.js';
@@ -93,17 +101,158 @@ export function parseSkillFrontmatter(content: string): SkillFrontmatter | null 
   };
 }
 
+// ── Reading a skill's file without following links ──────────────────────────
+
+/**
+ * The flags a SKILL.md is opened with: read only, never through a symbolic link
+ * in the file's own place (`O_NOFOLLOW`) and never waiting (`O_NONBLOCK`), where
+ * the platform has each flag; Windows has neither. Without `O_NONBLOCK`, opening
+ * a named pipe that no process writes waits for a writer that may never come.
+ */
+const READ_FLAGS: number =
+  fsConstants.O_RDONLY | (fsConstants.O_NOFOLLOW ?? 0) | (fsConstants.O_NONBLOCK ?? 0);
+
+/** The codes an open with `O_NOFOLLOW` fails with when a symbolic link holds the file's place (EMLINK on FreeBSD). */
+const LINK_OPEN_CODES: ReadonlySet<string> = new Set(['ELOOP', 'EMLINK']);
+
+/**
+ * The codes an open fails with when something other than a regular file holds
+ * the file's place: EISDIR for a folder, ENXIO for a device with no driver or,
+ * on Linux, a socket, and EOPNOTSUPP for a socket on macOS.
+ */
+const SPECIAL_OPEN_CODES: ReadonlySet<string> = new Set(['EISDIR', 'ENXIO', 'EOPNOTSUPP']);
+
+/** Why a workspace skill's SKILL.md was not read. */
+type Refusal = 'linked-folder' | 'linked-file' | 'not-a-file' | 'replaced';
+
+/** The words a warning or an error gives for each refusal. */
+const REFUSAL_REASONS: Readonly<Record<Refusal, string>> = {
+  'linked-folder': 'the skill folder is a symbolic link',
+  'linked-file': 'its SKILL.md is a symbolic link',
+  'not-a-file': 'its SKILL.md is not a regular file',
+  replaced: 'its SKILL.md was replaced while it was being opened',
+};
+
+/**
+ * Read `<skillsDir>/<folderName>/SKILL.md` without following a symbolic link
+ * below `skillsDir`. The skill folder and its SKILL.md are each looked at with
+ * lstat before the open: a link at either place is refused, and so is a
+ * SKILL.md that is not a regular file (a folder, a named pipe, a socket, a
+ * device). The file is then opened never through a link in its own place and
+ * never waiting, where the platform has the flags, and it is read only when the
+ * open file is a regular file with the device and inode numbers the look saw.
+ * `skillsDir` itself is the caller's choice and may be a link.
+ *
+ * Node has no `openat`, so a skill folder that another process swaps for a link
+ * between its look and the open is outside what these checks stop.
+ *
+ * @param skillsDir  - Absolute path of the skills folder.
+ * @param folderName - The skill folder's name, as `readdir` lists it.
+ * @returns The file's text; null when `folderName` is not a folder or holds no
+ *   SKILL.md; or the refusal.
+ * @throws Any other error the looks, the open or the read meet.
+ */
+async function readSkillFileOutsideLinks(
+  skillsDir: string,
+  folderName: string,
+): Promise<{ text: string } | Refusal | null> {
+  const folder = path.join(skillsDir, folderName);
+  const folderEntry = await lstatOrNull(folder);
+  if (folderEntry === null) return null;
+  if (folderEntry.isSymbolicLink()) return 'linked-folder';
+  // A file beside the skill folders is not a skill.
+  if (!folderEntry.isDirectory()) return null;
+
+  const file = path.join(folder, 'SKILL.md');
+  const fileEntry = await lstatOrNull(file);
+  if (fileEntry === null) return null;
+  if (fileEntry.isSymbolicLink()) return 'linked-file';
+  if (!fileEntry.isFile()) return 'not-a-file';
+
+  const handle = await fs.open(file, READ_FLAGS).catch((err: unknown) => {
+    const code = String((err as NodeJS.ErrnoException).code);
+    // Taken away since the look.
+    if (code === 'ENOENT') return null;
+    if (LINK_OPEN_CODES.has(code)) return 'linked-file' as const;
+    if (SPECIAL_OPEN_CODES.has(code)) return 'not-a-file' as const;
+    throw err;
+  });
+  if (handle === null || typeof handle === 'string') return handle;
+  try {
+    const opened = await handle.stat({ bigint: true });
+    // Something put in the file's place since the look is refused here, before it is read.
+    if (!opened.isFile()) return 'not-a-file';
+    if (!sameFile(fileEntry, opened)) return 'replaced';
+    return { text: await handle.readFile({ encoding: 'utf8' }) };
+  } finally {
+    await handle.close();
+  }
+}
+
+/**
+ * True when the look and the open reached one file: the same device and inode
+ * numbers, or a file system that reports an inode of 0, which names no file.
+ */
+function sameFile(looked: BigIntStats, opened: BigIntStats): boolean {
+  if (looked.ino === 0n || opened.ino === 0n) return true;
+  return looked.dev === opened.dev && looked.ino === opened.ino;
+}
+
+/** The entry at `place` itself, a link not followed, or null when there is none. */
+async function lstatOrNull(place: string): Promise<BigIntStats | null> {
+  try {
+    return await fs.lstat(place, { bigint: true });
+  } catch (err) {
+    const code = (err as NodeJS.ErrnoException).code;
+    // ENOTDIR: a folder on the way became a file since it was listed.
+    if (code === 'ENOENT' || code === 'ENOTDIR') return null;
+    throw err;
+  }
+}
+
+/** The error's code when it has one, such as EACCES, and its message otherwise. */
+function errorReason(err: unknown): string {
+  const code = (err as NodeJS.ErrnoException | undefined)?.code;
+  if (typeof code === 'string' && code) return code;
+  return err instanceof Error ? err.message : String(err);
+}
+
+/** Write the one warning line for a workspace skill that discovery skipped. */
+function warnSkipped(folder: string, reason: string): void {
+  console.warn(`[agentos-skills-registry] Skipped the workspace skill at ${folder}: ${reason}.`);
+}
+
 // ── Skill discovery ─────────────────────────────────────────────────────────
 
 /**
- * Create a lazy-loading skill factory for an absolute SKILL.md path.
- * Used for workspace-discovered skills where the path is already resolved.
+ * Create the lazy loader of a workspace skill. Each call reads the skill's
+ * SKILL.md again, the way discovery read it: never through a symbolic link
+ * below the skills folder, and only when it is a regular file. A refused or
+ * missing file rejects the call.
  */
-function createAbsoluteSkillLoader(
-  absolutePath: string,
+function createWorkspaceSkillLoader(
+  skillsDir: string,
+  folderName: string,
   displayName: string,
-): () => Promise<import('./catalog.js').LoadedSkill> {
-  return async () => loadSkillFromAbsolutePath(absolutePath, displayName);
+): () => Promise<LoadedSkill> {
+  const absolutePath = path.join(skillsDir, folderName, 'SKILL.md');
+  return async () => {
+    let read: { text: string } | Refusal | null;
+    try {
+      read = await readSkillFileOutsideLinks(skillsDir, folderName);
+    } catch (err) {
+      throw new Error(
+        `Failed to load SKILL.md at ${absolutePath}: ${err instanceof Error ? err.message : String(err)}`,
+      );
+    }
+    if (read === null) {
+      throw new Error(`Failed to load SKILL.md at ${absolutePath}: the file is not there`);
+    }
+    if (typeof read === 'string') {
+      throw new Error(`Failed to load SKILL.md at ${absolutePath}: ${REFUSAL_REASONS[read]}`);
+    }
+    return loadSkillFromContent({ absolutePath, content: read.text, displayName });
+  };
 }
 
 /**
@@ -112,7 +261,8 @@ function createAbsoluteSkillLoader(
 function frontmatterToEntry(
   fm: SkillFrontmatter,
   skillPath: string,
-  absoluteSkillMdPath: string,
+  skillsDir: string,
+  folderName: string,
 ): SkillCatalogEntry {
   const displayName = fm.name
     .split('-')
@@ -130,7 +280,7 @@ function frontmatterToEntry(
     source: 'community' as const,
     namespace: 'wunderland',
     available: true,
-    loadSkill: createAbsoluteSkillLoader(absoluteSkillMdPath, displayName),
+    loadSkill: createWorkspaceSkillLoader(skillsDir, folderName, displayName),
   };
 }
 
@@ -142,6 +292,13 @@ function frontmatterToEntry(
  * SkillCatalogEntry[] compatible with the existing catalog.
  *
  * If the directory does not exist, returns an empty array.
+ *
+ * Symbolic links below `<skillsDir>/` are not followed. A skill folder that is
+ * a link, a SKILL.md that is a link, and a SKILL.md that is not a regular file
+ * are each skipped with one warning line, and nothing is read through them.
+ * Each entry's `loadSkill()` reads its SKILL.md the same way, so it rejects
+ * once the skill folder or the file has become a link. `<skillsDir>` itself is
+ * the caller's choice and may be a link.
  *
  * @example
  * ```ts
@@ -177,30 +334,27 @@ export async function discoverWorkspaceSkills(
   for (const entry of entries) {
     const entryPath = path.join(skillsDir, entry);
 
-    // Only scan directories
-    let stat;
+    // Only real directories, and a SKILL.md in one that is a regular file
+    let read: { text: string } | Refusal | null;
     try {
-      stat = await fs.stat(entryPath);
-    } catch {
+      read = await readSkillFileOutsideLinks(skillsDir, entry);
+    } catch (err) {
+      warnSkipped(entryPath, `its SKILL.md could not be read (${errorReason(err)})`);
       continue;
     }
-    if (!stat.isDirectory()) continue;
-
-    // Look for SKILL.md inside the directory
-    const skillMdPath = path.join(entryPath, 'SKILL.md');
-    let content: string;
-    try {
-      content = await fs.readFile(skillMdPath, 'utf-8');
-    } catch {
+    if (read === null) continue;
+    if (typeof read === 'string') {
+      warnSkipped(entryPath, REFUSAL_REASONS[read]);
       continue;
     }
 
-    const frontmatter = parseSkillFrontmatter(content);
+    const frontmatter = parseSkillFrontmatter(read.text);
     if (!frontmatter) continue;
 
     // Use relative path from skillsDir for the skillPath
+    const skillMdPath = path.join(entryPath, 'SKILL.md');
     const relativePath = path.relative(skillsDir, skillMdPath);
-    discovered.push(frontmatterToEntry(frontmatter, relativePath, skillMdPath));
+    discovered.push(frontmatterToEntry(frontmatter, relativePath, skillsDir, entry));
   }
 
   return discovered;

@@ -277,7 +277,19 @@ export function extractLoadedSkillMetadata(
   };
 }
 
-async function loadSkillFromContent(args: {
+/**
+ * Parse SKILL.md text the caller has already read into a {@link LoadedSkill},
+ * with the same parser {@link loadSkillFromAbsolutePath} uses. Workspace
+ * discovery reads a workspace skill's file itself, without following links,
+ * and parses the text here.
+ *
+ * @param args.absolutePath - Where the text was read from. It becomes
+ *   `sourcePath`, and its folder's name is the skill's name when the
+ *   frontmatter gives none.
+ * @param args.content      - The SKILL.md text.
+ * @param args.displayName  - Human-readable display name for the loaded skill.
+ */
+export async function loadSkillFromContent(args: {
   absolutePath: string;
   content: string;
   displayName: string;
