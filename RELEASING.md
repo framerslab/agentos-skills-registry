@@ -48,6 +48,8 @@ There is no prerelease channel; every release comes from `master`.
 
 The release workflow uses the `NPM_TOKEN` repository secret (an npm granular access token with read and write access to the `@framers` packages) and the `GITHUB_TOKEN` that GitHub Actions provides.
 
+The weekly dependency bump ([`bump-framers-deps.yml`](https://github.com/framerslab/agentos-skills-registry/blob/master/.github/workflows/bump-framers-deps.yml)) pushes its branch and opens its pull request with `FRAMERS_BUMP_TOKEN`, a personal access token held as a framerslab organization secret, so CI and Links start on the pull request on their own: GitHub holds the runs of a pull request opened with `GITHUB_TOKEN` until someone with write access approves them. Without the secret, the bump's first step fails the run.
+
 ## Troubleshooting
 
 - **No release published:** no commit since the last tag has a releasing type, or the build or a test failed before the release step.
