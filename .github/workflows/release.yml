@@ -32,6 +32,10 @@ jobs:
       - run: pnpm test
       - name: Install next to the latest agentos (npm checks the peer ranges)
         run: pnpm run check:install
+      # Trusted publishing needs npm 11.5.1 or later: under Node 22's npm 10 the publish ends in ENEEDAUTH
+      # once a trusted publisher exists (framerslab/agentos Release run 39490192582, 20 October 2026).
+      - name: Use npm 11 for trusted publishing
+        run: npm install -g npm@11.20.0 && npm --version
       - name: Semantic Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
