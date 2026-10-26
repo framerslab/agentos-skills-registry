@@ -9,6 +9,7 @@ import { describe, expect, it } from 'vitest';
 const workflow = fs.readFileSync(new URL('../.github/workflows/pr-title.yml', import.meta.url), 'utf8');
 const form = workflow.match(/^\s*form='([^']+)'$/m)[1];
 
+/** Whether the check passes `title`: grep -E with the workflow's expression, run on the title as the check runs it. */
 function passes(title) {
   const { status, error } = spawnSync('grep', ['-Eq', form], { input: `${title}\n` });
   if (error || (status !== 0 && status !== 1)) {

@@ -15,6 +15,7 @@ const [, analyzerConfig] = releaseConfig.plugins.find(
 );
 const cwd = fileURLToPath(new URL('..', import.meta.url));
 
+/** The release the analyzer decides when `message` is the one commit since the last release, or null for none. */
 async function releaseFor(message) {
   const { analyzeCommits } = await import(pathToFileURL(analyzerPath).href);
   return analyzeCommits(analyzerConfig, {
