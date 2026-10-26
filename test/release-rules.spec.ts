@@ -35,6 +35,9 @@ describe('release rules', () => {
     ['docs: name the title check in the release guide', null],
     ['feat: add a catalog query', 'minor'],
     ['fix: keep the catalog order stable', 'patch'],
+    // A squash commit's body is blank here, so a revert pull request reaches master as a revert: subject with
+    // no "This reverts commit" line for the analyzer's default revert rule to read.
+    ['revert: drop the catalog query', 'patch'],
     ['Revert "feat: add a catalog query"\n\nThis reverts commit 0123456789abcdef0123456789abcdef01234567.', 'patch'],
     ['feat!: drop the CommonJS entry point', 'major'],
     // The repeated default breaking rule: a commit that a configured rule matches never reaches the defaults.
