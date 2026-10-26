@@ -38,7 +38,7 @@ BREAKING CHANGE: <what users must change>
 
 That footer becomes the breaking-change note in the GitHub release.
 
-A title outside the Conventional Commits form parses with no type, matches no rule and releases nothing, whatever the pull request changed. The "Pull request title" check ([`pr-title.yml`](https://github.com/framerslab/agentos-skills-registry/blob/master/.github/workflows/pr-title.yml)) refuses such a title while the pull request is open; retitle the pull request and the check runs again.
+A title outside the Conventional Commits form parses with no type, so no rule matches it by type: unless the commit body carries a `BREAKING CHANGE:` footer, it releases nothing, whatever the pull request changed. The "Pull request title" check ([`pr-title.yml`](https://github.com/framerslab/agentos-skills-registry/blob/master/.github/workflows/pr-title.yml)) refuses such a title while the pull request is open; retitle the pull request and the check runs again.
 
 ## Never
 

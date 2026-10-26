@@ -29,7 +29,7 @@ describe('pull request title check', () => {
   });
 
   it.each([
-    // No type: the squash commit would release nothing, whatever it changed.
+    // No type: squashed with a blank body, the commit would release nothing, whatever it changed.
     'Land two idle pull requests in one batch: #31, #28 (#35)',
     // git revert's own subject. Squashed with this repository's blank body it carries no "This reverts commit"
     // line, so it would release nothing; the pull request is retitled revert: instead.

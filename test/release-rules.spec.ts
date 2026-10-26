@@ -43,9 +43,11 @@ describe('release rules', () => {
     // The repeated default breaking rule: a commit that a configured rule matches never reaches the defaults.
     ['chore(deps)!: require @framers/agentos 0.16 or later', 'major'],
     ['chore(deps): bump @framers/agentos to 0.16.0\n\nBREAKING CHANGE: hosts on @framers/agentos 0.15 must upgrade.', 'major'],
-    // A title outside the form parses with no type and releases nothing, whatever the commit changed. The
-    // Pull request title check refuses such a title before the merge.
+    // A title outside the form parses with no type: without a BREAKING CHANGE footer it releases nothing,
+    // whatever the commit changed, and with one the breaking rule still applies. The Pull request title check
+    // refuses such a title before the merge.
     ['Land two idle pull requests in one batch: #31, #28 (#35)', null],
+    ['Land two idle pull requests in one batch: #31, #28 (#35)\n\nBREAKING CHANGE: the catalog drops the old ids.', 'major'],
   ])('%s releases %s', async (message, release) => {
     expect(await releaseFor(message)).toBe(release);
   });
