@@ -18,9 +18,11 @@ function passes(title) {
   return status === 0;
 }
 
-// grep is the check's own program, and Windows has none on its default PATH, so the cases skip there; CI runs
-// them on its ubuntu runner.
-describe.skipIf(process.platform === 'win32')('pull request title check', () => {
+// grep is the check's own program, so the cases skip only where it cannot start, such as a Windows machine with
+// none on its PATH; a machine with grep runs them, and CI runs them on its ubuntu runner.
+const grepStarts = !spawnSync('grep', ['--version']).error;
+
+describe.skipIf(!grepStarts)('pull request title check', () => {
   it.each([
     'ci: refuse a pull request title outside the Conventional Commits form',
     'fix(deps): bump @framers/* deps to latest published versions',
