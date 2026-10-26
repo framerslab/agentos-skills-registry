@@ -15,16 +15,16 @@ The tag `v0.19.0` marks a version that was published to npm outside this workflo
 
 ## Version rules
 
-[`release.config.cjs`](https://github.com/framerslab/agentos-skills-registry/blob/master/release.config.cjs) sets the `conventionalcommits` preset and one rule of its own: a `chore(deps)` commit releases a patch, because a dependency bump changes the ranges the package installs. The commit analyzer's default rules decide every other commit:
+[`release.config.cjs`](https://github.com/framerslab/agentos-skills-registry/blob/master/release.config.cjs) sets the `conventionalcommits` preset and two rules of its own, each a patch: a `chore(deps)` commit, because a dependency bump changes the ranges the package installs, and a `revert:` commit, because the squash commit's body is blank and so carries no `This reverts commit` line for the default revert rule to read. The commit analyzer's default rules decide every other commit:
 
 | Commit | Release | Example |
 |---|---|---|
 | `feat:` | minor | 0.19.0 to 0.20.0 |
-| `fix:`, `perf:`, `chore(deps):`, a revert commit as `git revert` writes it | patch | 0.19.0 to 0.19.1 |
+| `fix:`, `perf:`, `revert:`, `chore(deps):`, a revert commit as `git revert` writes it | patch | 0.19.0 to 0.19.1 |
 | any type with `!` before the colon, or a `BREAKING CHANGE:` footer | major | 0.19.0 to 1.0.0 |
 | `docs:`, `chore:` (`chore(deps-dev):` included), `test:`, `ci:`, `build:`, `style:`, `refactor:` | none | |
 
-The analyzer takes a commit to its default rules only when none of the configured rules matches it, so the configuration repeats the default breaking-change rule: a `chore(deps)` commit with `!` or a `BREAKING CHANGE:` footer releases a major, as any breaking commit does. [`test/release-rules.spec.ts`](https://github.com/framerslab/agentos-skills-registry/blob/master/test/release-rules.spec.ts) runs the analyzer on this configuration for each row.
+The analyzer takes a commit to its default rules only when none of the configured rules matches it, so the configuration repeats the default breaking-change rule: a `chore(deps)` or `revert` commit with `!` or a `BREAKING CHANGE:` footer releases a major, as any breaking commit does. [`test/release-rules.spec.ts`](https://github.com/framerslab/agentos-skills-registry/blob/master/test/release-rules.spec.ts) runs the analyzer on this configuration for each row.
 
 The package is below 1.0.0, and a breaking change releases 1.0.0.
 
