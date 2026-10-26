@@ -15,7 +15,7 @@ The tag `v0.19.0` marks a version that was published to npm outside this workflo
 
 ## Version rules
 
-[`release.config.cjs`](https://github.com/framerslab/agentos-skills-registry/blob/master/release.config.cjs) sets the `conventionalcommits` preset and two rules of its own, each a patch: a `chore(deps)` commit, because a dependency bump changes the ranges the package installs, and a `revert:` commit, because the squash commit's body is blank and so carries no `This reverts commit` line for the default revert rule to read. The commit analyzer's default rules decide every other commit:
+[`release.config.cjs`](https://github.com/framerslab/agentos-skills-registry/blob/master/release.config.cjs) sets the `conventionalcommits` preset and three release rules. Two are its own, each a patch: a `chore(deps)` commit, because a dependency bump changes the ranges the package installs, and a `revert:` commit, because the squash commit's body is blank and so carries no `This reverts commit` line for the default revert rule to read. The third repeats the default breaking-change rule, a major, for the reason given below the table. The commit analyzer's default rules decide every other commit:
 
 | Commit | Release | Example |
 |---|---|---|

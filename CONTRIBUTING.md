@@ -31,7 +31,7 @@ Every file under `src/` starts with `// @ts-nocheck`, so the build reports no ty
 
 ## Commit messages
 
-Commits follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/). The type decides the release. [`release.config.cjs`](https://github.com/framerslab/agentos-skills-registry/blob/master/release.config.cjs) sets the `conventionalcommits` preset and two rules of its own, `chore(deps)` and `revert` each release a patch; the commit analyzer's default rules decide every other commit:
+Commits follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/). The type decides the release. [`release.config.cjs`](https://github.com/framerslab/agentos-skills-registry/blob/master/release.config.cjs) sets the `conventionalcommits` preset and three release rules: `chore(deps)` and `revert` each release a patch, and the default breaking-change rule is repeated, so a breaking commit of either type still releases a major; the commit analyzer's default rules decide every other commit:
 
 | Commit | Release |
 |---|---|
