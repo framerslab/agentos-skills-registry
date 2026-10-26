@@ -17,7 +17,9 @@ function passes(title) {
   return status === 0;
 }
 
-describe('pull request title check', () => {
+// grep is the check's own program, and Windows has none on its default PATH, so the cases skip there; CI runs
+// them on its ubuntu runner.
+describe.skipIf(process.platform === 'win32')('pull request title check', () => {
   it.each([
     'ci: refuse a pull request title outside the Conventional Commits form',
     'fix(deps): bump @framers/* deps to latest published versions',
