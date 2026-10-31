@@ -31,16 +31,18 @@ Every file under `src/` starts with `// @ts-nocheck`, so the build reports no ty
 
 ## Commit messages
 
-Commits follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/). The type decides the release. [`release.config.cjs`](https://github.com/framerslab/agentos-skills-registry/blob/master/release.config.cjs) sets the `conventionalcommits` preset and no rules of its own, so the commit analyzer's default rules apply:
+Commits follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/). The type decides the release. [`release.config.cjs`](https://github.com/framerslab/agentos-skills-registry/blob/master/release.config.cjs) sets the `conventionalcommits` preset and three release rules: `chore(deps)` and `revert` each release a patch, and the default breaking-change rule is repeated, so a breaking commit of either type still releases a major; the commit analyzer's default rules decide every other commit:
 
 | Commit | Release |
 |---|---|
 | `feat` | minor |
-| `fix`, `perf`, a revert commit as `git revert` writes it | patch |
+| `fix`, `perf`, `revert`, `chore(deps)`, a revert commit as `git revert` writes it | patch |
 | any type with `!` before the colon, or a `BREAKING CHANGE:` footer | major |
-| `docs`, `chore`, `test`, `ci`, `build`, `style`, `refactor` | none |
+| `docs`, `chore` (`chore(deps-dev)` included), `test`, `ci`, `build`, `style`, `refactor` | none |
 
 The package is below 1.0.0, and a major release takes it to 1.0.0. Mark a change as breaking only when it is one.
+
+A commit that changes `dependencies` or `peerDependencies` is titled `chore(deps)` or `fix(deps)` and publishes a patch; one that changes `devDependencies` alone is titled `chore(deps-dev)` and publishes nothing. A pull request that undoes an earlier change is titled `revert: <what it undoes>` and publishes a patch.
 
 Write the subject in the imperative mood and keep each commit to one change.
 
@@ -49,7 +51,7 @@ Write the subject in the imperative mood and keep each commit to one change.
 - Keep each pull request to one concern.
 - Fill in the [pull request template](https://github.com/framerslab/agentos-skills-registry/blob/master/.github/pull_request_template.md), including how you verified the change.
 - Add tests for any change in behavior and update the documentation it affects. CI must be green.
-- Maintainers squash-merge with the pull request title as the commit subject, which is what the release reads. Give the title the Conventional Commits form, put `!` before the colon for a change that breaks users (`feat!:` or `feat(api)!:`), and describe what users must change in the Migration notes section.
+- Maintainers squash-merge with the pull request title as the commit subject, which is what the release reads. Give the title the Conventional Commits form, put `!` before the colon for a change that breaks users (`feat!:` or `feat(api)!:`), and describe what users must change in the Migration notes section. The "Pull request title" check refuses a title outside the form.
 
 ## Automated review threads
 
