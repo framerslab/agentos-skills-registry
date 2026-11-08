@@ -32,7 +32,7 @@ CI runs (job "build" in [`.github/workflows/ci.yml`](https://github.com/framersl
 2. `pnpm build` (`tsc`)
 3. `pnpm test` (`vitest run`)
 
-The release workflow runs the same three steps before it releases.
+A pull request runs all three, and the install check next to the latest agentos (`pnpm run check:install`). A push to `master` runs the build and only the tests its changes reach (`vitest run --changed`). The daily release calls the same workflow and runs the whole suite before it releases.
 
 To run one test file: `pnpm exec vitest run <path>`.
 
@@ -55,7 +55,7 @@ Available scripts that CI does not run: `pnpm run clean` (removes `dist`).
 
 ## Releases
 
-semantic-release evaluates every push to `master`, except a push whose head commit message contains `[skip ci]`. `feat` releases a minor; `fix`, `perf` and a revert commit release a patch; a breaking change releases a major, which takes this package to 1.0.0; `docs`, `chore`, `test`, `ci`, `build`, `style` and `refactor` release nothing. The release pushes a `v` tag and publishes to npm; it commits nothing, so never edit the `version` field to release, never create a `v` tag by hand and never run `npm publish`. Details: the [release guide](https://github.com/framerslab/agentos-skills-registry/blob/master/RELEASING.md).
+The release runs once a day at 10:17 UTC: its first job publishes nothing unless a commit since the last `v` tag both releases and changes what the package ships (`src/`, `tsconfig.json`, `package.json`, `README.md`, `LICENSE`), then the whole suite runs and semantic-release publishes. A push to `master` never publishes. To release now: `gh workflow run release.yml --ref master` (`-f dry_run=true` stops before the publish). `feat` releases a minor; `fix`, `perf` and a revert commit release a patch; a breaking change releases a major, which takes this package to 1.0.0; `docs`, `chore`, `test`, `ci`, `build`, `style` and `refactor` release nothing. The release pushes a `v` tag and publishes to npm; it commits nothing, so never edit the `version` field to release, never create a `v` tag by hand and never run `npm publish`. Details: the [release guide](https://github.com/framerslab/agentos-skills-registry/blob/master/RELEASING.md).
 
 ## Automated review threads
 

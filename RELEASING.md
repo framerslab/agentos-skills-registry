@@ -1,13 +1,33 @@
 # Releasing @framers/agentos-skills-registry
 
-Releases are automated. Every push to `master`, whether a merged pull request or a maintainer's commit, is evaluated for a release; nobody publishes by hand.
+Releases are automated and run once a day. At 10:17 UTC the release workflow checks master for changes to release since the last version tag and publishes them; nobody publishes by hand. A push to `master` runs CI's quick checks and never publishes.
 
-## What happens after a push to `master`
+## What happens each day
 
-1. The release workflow ([`release.yml`](https://github.com/framerslab/agentos-skills-registry/blob/master/.github/workflows/release.yml)) starts on the push. It does not wait for the CI workflow: it runs the same steps itself. A push whose head commit message contains `[skip ci]` is skipped.
-2. The workflow runs `pnpm install --no-frozen-lockfile`, `pnpm build` and `pnpm test`. A failing step stops the run before anything is released.
-3. `pnpm exec semantic-release` reads every commit since the last version tag and decides the version with the rules below. With no releasing commit, nothing publishes.
-4. On a release, [semantic-release](https://semantic-release.gitbook.io/) pushes the tag `v<version>`, then publishes the package to npm, which runs `prepublishOnly` (the build) first, and creates a GitHub release with the generated notes.
+1. The release workflow ([`release.yml`](https://github.com/framerslab/agentos-skills-registry/blob/master/.github/workflows/release.yml)) starts on its schedule, at 10:17 UTC. GitHub can start a scheduled run late, or drop it, when Actions is busy.
+2. Its first job, "Releasable changes", runs [`.github/scripts/release-gate.mjs`](https://github.com/framerslab/agentos-skills-registry/blob/master/.github/scripts/release-gate.mjs) with git and Node alone, before anything is installed. It reads every commit since the highest `v<version>` tag on `master` and counts a commit that both releases under the version rules below and changes what the package ships: `src/` (which `pnpm build` compiles into `dist`), `tsconfig.json`, `package.json`, `README.md` or `LICENSE`. It writes its decision and the commits behind it to the log and the run summary. With no such commit, the run ends there, green.
+3. With one, the "Suite" job runs CI's whole suite on that commit ([`ci.yml`](https://github.com/framerslab/agentos-skills-registry/blob/master/.github/workflows/ci.yml), called with `release: true`): `pnpm install --no-frozen-lockfile`, `pnpm build`, `pnpm test` and the install check next to the latest `@framers/agentos`. A failing step stops the run before anything is released.
+4. The "Release" job then runs `pnpm exec semantic-release`, which reads the same commits and decides the version with the rules below. With no releasing commit, nothing publishes.
+5. On a release, [semantic-release](https://semantic-release.gitbook.io/) pushes the tag `v<version>`, then publishes the package to npm, which runs `prepublishOnly` (the build) first, and creates a GitHub release with the generated notes.
+
+## Releasing now
+
+To release without waiting for the next day, dispatch the workflow on `master`:
+
+```bash
+gh workflow run release.yml --ref master
+```
+
+or use "Run workflow" on the workflow's page under Actions. A dispatch runs the same check first. Two inputs, both off by default:
+
+- `force`: skip the check and run the suite and semantic-release whatever changed. semantic-release still publishes nothing when no commit since the tag releases.
+- `dry_run`: run the check, the suite and the release job up to the publish, and stop there; nothing is tagged, published or released.
+
+```bash
+gh workflow run release.yml --ref master -f dry_run=true
+```
+
+A dispatch on any branch other than `master` fails at its first step. One release run goes at a time; a run started while another is going waits for it and is never cancelled by it.
 
 The release commits nothing to the repository. The `version` field in `package.json` on `master` is not the published version. The notes are on the [releases page](https://github.com/framerslab/agentos-skills-registry/releases).
 
@@ -44,7 +64,6 @@ A title outside the Conventional Commits form parses with no type, so no rule ma
 
 - Run `npm publish`.
 - Create or move a `v` tag by hand. semantic-release takes the highest version tag on `master` as the last release.
-- Push a code change to `master` with `[skip ci]` in the message.
 
 There is no prerelease channel; every release comes from `master`.
 
@@ -56,5 +75,5 @@ The weekly dependency bump ([`bump-framers-deps.yml`](https://github.com/framers
 
 ## Troubleshooting
 
-- **No release published:** no commit since the last tag has a releasing type, or the build or a test failed before the release step.
-- **npm publish fails:** for example a 401 when the `NPM_TOKEN` secret has expired or lacks write access to `@framers`. semantic-release pushes the `v<version>` tag before it publishes, so that version is tagged on GitHub and missing from npm, and it is not retried: the tag is the last release from then on. Fix the cause. The next releasing commit publishes the following version; that package contains the skipped version's changes, and its release notes list only the commits after the tag.
+- **No release published:** the day's run found no commit since the last tag that both has a releasing type and changes a shipped file (the "Releasable changes" job's summary names what it read), or the build or a test failed before the release step. A change merged after 10:17 UTC publishes the next day, or at once through a dispatch.
+- **npm publish fails:** for example a 401 when the `NPM_TOKEN` secret has expired or lacks write access to `@framers`. semantic-release pushes the `v<version>` tag before it publishes, so that version is tagged on GitHub and missing from npm, and it is not retried: the tag is the last release from then on. Fix the cause. The next release run with a releasing commit publishes the following version; that package contains the skipped version's changes, and its release notes list only the commits after the tag.

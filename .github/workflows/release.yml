@@ -1,20 +1,97 @@
 name: Release
 
+# A release runs once a day, at 10:17 UTC, when master holds a change to release. The gate job reads the
+# commits since the last release tag with git and node alone (.github/scripts/release-gate.mjs) and ends the
+# run there, green, when none of them both releases by release.config.cjs and changes what the package ships
+# (dist's sources in src/, tsconfig.json, package.json, README.md, LICENSE). Otherwise CI's whole suite runs
+# on master's commit (ci.yml, through workflow_call) and the release job publishes that commit with
+# semantic-release. Pushes to master run CI's quick checks alone and never publish.
+#
+# To release now, dispatch this workflow on master:
+#   gh workflow run release.yml --ref master
+# force: true skips the gate's check; dry_run: true runs the gate, the suite and the release job up to the
+# publish and stops there, so nothing is tagged, published or released:
+#   gh workflow run release.yml --ref master -f dry_run=true
+# GitHub may start a scheduled run late, or drop it, when Actions is busy:
+# https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule
 on:
-  push:
-    branches: [master]
+  schedule:
+    - cron: '17 10 * * *'
+  workflow_dispatch:
+    inputs:
+      force:
+        description: Release without checking for releasing changes since the last tag
+        type: boolean
+        default: false
+      dry_run:
+        description: Stop before the publish; tag, publish and release nothing
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+# One release run at a time, so two runs never race semantic-release's tag and version; a release run is
+# never cancelled.
+concurrency:
+  group: release
+  cancel-in-progress: false
 
 jobs:
-  release:
+  gate:
+    name: Releasable changes
     runs-on: ubuntu-latest
-    if: "!contains(github.event.head_commit.message, '[skip ci]')"
-    # Only the job that publishes can ask for an OIDC token (npm trusted publishing).
+    timeout-minutes: 5
+    outputs:
+      releasable: ${{ steps.check.outputs.releasable }}
+    steps:
+      # A dispatched run can start on any branch; a release comes from master alone.
+      - name: Release from master only
+        if: github.ref != 'refs/heads/master'
+        run: |
+          echo "::error::a release runs on master; this run is on $GITHUB_REF"
+          exit 1
+
+      # Every commit and tag, without the contents of past files: the check reads commit messages and the
+      # paths each commit changes.
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          filter: blob:none
+          persist-credentials: false
+
+      - name: Check for releasing changes since the last tag
+        id: check
+        env:
+          FORCE: ${{ inputs.force && 'true' || 'false' }}
+        run: node .github/scripts/release-gate.mjs
+
+  suite:
+    name: Suite
+    needs: gate
+    if: needs.gate.outputs.releasable == 'true'
+    uses: ./.github/workflows/ci.yml
+    with:
+      release: true
+    permissions:
+      contents: read
+
+  release:
+    name: Release
+    needs: [gate, suite]
+    if: needs.gate.outputs.releasable == 'true'
+    runs-on: ubuntu-latest
+    # Only the job that publishes can ask for an OIDC token (npm trusted publishing) or write.
     permissions:
       contents: write
       issues: write
       pull-requests: write
       id-token: write
     steps:
+      # The commit the suite tested: a scheduled or dispatched run's commit is master's when the run started.
+      # When master has moved on since, semantic-release finds the local branch behind the remote and
+      # publishes nothing; the next day's run releases the newer commit.
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0
@@ -29,14 +106,15 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
       - run: pnpm install --no-frozen-lockfile
       - run: pnpm build
-      - run: pnpm test
-      - name: Install next to the latest agentos (npm checks the peer ranges)
-        run: pnpm run check:install
       # Trusted publishing needs npm 11.5.1 or later: under Node 22's npm 10 the publish ends in ENEEDAUTH
       # once a trusted publisher exists (framerslab/agentos Release run 39490192582, 20 October 2026).
       - name: Use npm 11 for trusted publishing
         run: npm install -g npm@11.20.0 && npm --version
+      - name: Dry run, nothing published
+        if: inputs.dry_run
+        run: echo "dry_run is set; the release stops before semantic-release, so nothing is tagged, published or released"
       - name: Semantic Release
+        if: ${{ !inputs.dry_run }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

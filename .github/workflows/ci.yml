@@ -1,17 +1,41 @@
 name: CI
 
+# A pull request runs the whole suite: install, build (tsc, which typechecks), every test and the install
+# check next to the latest agentos. A push to master runs the quick checks alone: the build and the tests
+# that the push's changes reach (vitest --changed), and never publishes. The daily release (release.yml)
+# calls this file through workflow_call with release: true on master's commit before it publishes, and only
+# on a day with a change to release; that run is the whole suite.
 on:
   push:
     branches: [master, main]
   pull_request:
+  workflow_call:
+    inputs:
+      release:
+        description: Run the whole suite, as the release does before it publishes
+        type: boolean
+        default: false
+
+# The workflow's token can read the repository and nothing else.
+permissions:
+  contents: read
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
+    env:
+      # A push to master, outside a release run: the quick checks.
+      QUICK: ${{ github.event_name == 'push' && !inputs.release }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+        with:
+          # The quick checks diff the push against the commit before it, so they need the history. The
+          # depth is a string: a bare 0 is false in an expression and would fall through to 1.
+          fetch-depth: ${{ github.event_name == 'push' && !inputs.release && '0' || '1' }}
+          persist-credentials: false
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v6
@@ -30,7 +54,23 @@ jobs:
         run: pnpm build
 
       - name: Test
+        if: env.QUICK != 'true'
         run: pnpm test
 
+      # vitest --changed runs the test files that the changed files reach through their imports, and every
+      # test when package.json changed; with none, it passes. A push whose base is missing runs every test.
+      - name: Test what the push changed
+        if: env.QUICK == 'true'
+        env:
+          BEFORE: ${{ github.event.before }}
+        run: |
+          if [ -n "$BEFORE" ] && [ "$BEFORE" != "0000000000000000000000000000000000000000" ] && git cat-file -e "$BEFORE^{commit}" 2>/dev/null; then
+            pnpm exec vitest run --changed "$BEFORE"
+          else
+            echo "No base commit for this push; running every test."
+            pnpm test
+          fi
+
       - name: Install next to the latest agentos (npm checks the peer ranges)
+        if: env.QUICK != 'true'
         run: pnpm run check:install
