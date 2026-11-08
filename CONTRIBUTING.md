@@ -23,7 +23,7 @@ pnpm test
 
 The repository commits no lockfile, so `pnpm install` resolves the newest version each range allows.
 
-CI ([`ci.yml`](https://github.com/framerslab/agentos-skills-registry/blob/master/.github/workflows/ci.yml)) runs one job, "build", on every pull request and every push to `master`. In order: `pnpm install --no-frozen-lockfile`, `pnpm build` and `pnpm test`. Maintainers merge a pull request only when CI is green.
+CI ([`ci.yml`](https://github.com/framerslab/agentos-skills-registry/blob/master/.github/workflows/ci.yml)) runs one job, "build", on every pull request and every push to `master`. On a pull request, in order: `pnpm install --no-frozen-lockfile`, `pnpm build`, `pnpm test` and the install check next to the latest `@framers/agentos`. On a push to `master` it runs the quick checks: the install, the build and the tests the push's changes reach (`vitest run --changed`). Maintainers merge a pull request only when CI is green.
 
 To run one test file: `pnpm exec vitest run <path>`.
 
@@ -73,7 +73,7 @@ This repository is Apache-2.0. By submitting a contribution you agree it is prov
 
 ## Releases
 
-Every push to `master`, including a merged pull request, starts the release workflow. The [release guide](https://github.com/framerslab/agentos-skills-registry/blob/master/RELEASING.md) explains what publishes and when.
+A release runs once a day, at 10:17 UTC, when changes that release have merged to `master` since the last version tag; a push to `master` runs CI's quick checks and never publishes. To release now, dispatch the release workflow on `master` (`gh workflow run release.yml --ref master`). The [release guide](https://github.com/framerslab/agentos-skills-registry/blob/master/RELEASING.md) explains what publishes and when.
 
 ## Code of Conduct
 

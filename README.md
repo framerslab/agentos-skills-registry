@@ -151,7 +151,7 @@ Discovery does not follow symbolic links below the skills folder. A skill folder
 | Guide | What |
 |---|---|
 | [Contributing](https://github.com/framerslab/agentos-skills-registry/blob/master/CONTRIBUTING.md) | Development setup, commit and pull request rules, review threads, contribution licensing |
-| [Release guide](https://github.com/framerslab/agentos-skills-registry/blob/master/RELEASING.md) | How a push to master becomes an npm release |
+| [Release guide](https://github.com/framerslab/agentos-skills-registry/blob/master/RELEASING.md) | How the daily release (10:17 UTC) publishes merged changes to npm, and how to release now |
 | [Agent instructions](https://github.com/framerslab/agentos-skills-registry/blob/master/AGENTS.md) | Commands and conventions for coding agents |
 | [Code of Conduct](https://github.com/framerslab/agentos-skills-registry/blob/master/.github/CODE_OF_CONDUCT.md) | Community standards |
 | [Security Policy](https://github.com/framerslab/agentos-skills-registry/blob/master/.github/SECURITY.md) | Reporting vulnerabilities privately |
