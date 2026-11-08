@@ -27,9 +27,12 @@ jobs:
             --remap "^https://github\.com/framerslab/agentos-skills-registry/(blob|tree)/master/ file://${{ github.workspace }}/"
             --exclude-path CHANGELOG.md
             './*.md' './.github/**/*.md'
-      # This repository's own links are checked offline in the step above, so this
-      # step skips them. github.com answers a burst of blob requests from a runner
-      # with 504s, so requests go four at a time and retry with a wait.
+      # --include alone limits this step to the matching links: with no --exclude,
+      # lychee skips every other link, and an --exclude would end that. This
+      # repository's own links are checked offline in the step above; the remap
+      # turns them into file links before the filter, so this step skips them.
+      # github.com answers a burst of blob requests from a runner with 504s, so
+      # requests go four at a time and retry with a wait.
       - name: Links to other first-party repositories
         if: github.event_name != 'pull_request'
         uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8 # v2.9.0
@@ -38,6 +41,6 @@ jobs:
             --no-progress
             --max-concurrency 4 --max-retries 5 --retry-wait-time 10
             --include '^https://github\.com/(framerslab|jddunn|manicinc)/[^/]+/(blob|tree)/'
-            --exclude '^https://github\.com/framerslab/agentos-skills-registry/'
+            --remap "^https://github\.com/framerslab/agentos-skills-registry/(blob|tree)/master/ file://${{ github.workspace }}/"
             --exclude-path CHANGELOG.md
             './*.md' './.github/**/*.md' './.github/ISSUE_TEMPLATE/*.yml'
