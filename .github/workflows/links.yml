@@ -32,7 +32,8 @@ jobs:
       # repository's own links are checked offline in the step above; the remap
       # turns them into file links before the filter, so this step skips them.
       # github.com answers a burst of blob requests from a runner with 504s, so
-      # requests go four at a time and retry with a wait.
+      # requests go four at a time. The retries cover 429s, timeouts and dropped
+      # connections; lychee v0.24.2 does not retry a 504 (only its nightly does).
       - name: Links to other first-party repositories
         if: github.event_name != 'pull_request'
         uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8 # v2.9.0
