@@ -10,6 +10,7 @@ import {
   CONVENTIONALCOMMITS_PARSER,
   decide,
   releaseReason,
+  report,
   releaseRulesOf,
   ships,
 } from '../.github/scripts/release-gate.mjs';
@@ -92,8 +93,12 @@ describe('release gate: what the package ships', () => {
     ['README.md', true],
     ['LICENSE', true],
     ['tsconfig.json', true],
+    // tsc reads tsconfig.json alone; a sibling config the build never reads ships nothing.
+    ['tsconfig.build.json', false],
+    ['tsconfig.test.json', false],
     ['src/catalog.ts', true],
-    ['src/catalog.spec.ts', false],
+    // tsconfig.json compiles every .ts under src/ into dist, a test file there included.
+    ['src/catalog.spec.ts', true],
     ['dist/index.js', true],
     ['test/skills-registry.spec.ts', false],
     ['release.config.cjs', false],
@@ -111,7 +116,37 @@ describe('release gate: what the package ships', () => {
     expect(tsconfig.compilerOptions.rootDir.replace(/^\.\//, '')).toBe('src');
     expect(tsconfig.compilerOptions.outDir.replace(/^\.\//, '')).toBe('dist');
     for (const pattern of tsconfig.include) expect(pattern.startsWith('src/')).toBe(true);
+    // The gate counts tsconfig.json alone among the configs, so it must not extend or reference another one.
+    expect(tsconfig.extends).toBeUndefined();
+    expect(tsconfig.references).toBeUndefined();
+    expect(pkg.scripts.build).toBe('tsc');
     expect(pkg.files).toEqual(['dist', 'README.md']);
+  });
+});
+
+describe('release gate: the report', () => {
+  it('prints a commit subject and its paths on one line each, escaped, and fences them in the summary', () => {
+    const { log, summary } = report({
+      releasable: true,
+      reason: '1 of 1 commits since v0.19.9 release and change what the package ships',
+      releasing: [
+        {
+          sha: 'a1b2c3d4e5f6a7b8c9d0a1b2c3d4e5f6a7b8c9d0',
+          header: 'fix: **bold** ```break``` \r\u001b[31m',
+          why: 'fix',
+          files: ['src/a\n::warning::forged.ts', 'README.md'],
+        },
+      ],
+    });
+    const lines = log.split('\n');
+    expect(lines).toHaveLength(2);
+    expect(lines.some((line) => line.startsWith('::'))).toBe(false);
+    expect(lines[1]).toContain('"src/a\\n::warning::forged.ts"');
+    expect(lines[1]).toContain('\\r\\u001b[31m');
+    // The fence is longer than the three backticks in the subject, so the subject cannot close it.
+    expect(summary).toContain('````text\n');
+    expect(summary.trimEnd().endsWith('````')).toBe(true);
+    expect(summary).not.toContain('\u001b');
   });
 });
 
@@ -182,6 +217,12 @@ describe('release gate: a git history', () => {
     git('tag', 'v0.19.2');
     commit('ci: move the release\n\nBREAKING CHANGE: hosts upgrade.', { 'tsconfig.json': '{}' });
     expect(run(dir).releasing[0]).toMatchObject({ why: 'breaking-change note', files: ['tsconfig.json'] });
+
+    git('tag', 'v1.0.0');
+    commit('fix: a config the build never reads', { 'tsconfig.build.json': '{}' });
+    expect(run(dir)).toMatchObject({ releasable: false });
+    commit('fix: a test beside the source', { 'src/catalog.spec.ts': 'export {};\n' });
+    expect(run(dir).releasing.map((c) => c.files)).toEqual([['src/catalog.spec.ts']]);
   });
 
   it('counts a merge commit through the commits it brings in', () => {
