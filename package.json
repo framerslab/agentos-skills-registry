@@ -74,7 +74,7 @@
     "provenance": true
   },
   "dependencies": {
-    "@framers/agentos-skills": "^0.10.3",
+    "@framers/agentos-skills": "^0.10.4",
     "yaml": "^2.8.1"
   },
   "peerDependencies": {
@@ -86,7 +86,7 @@
     }
   },
   "devDependencies": {
-    "@framers/agentos": "^0.15.19",
+    "@framers/agentos": "^0.15.119",
     "@types/node": "^20.12.12",
     "typescript": "^5.4.5",
     "vitest": "^1.0.0",
