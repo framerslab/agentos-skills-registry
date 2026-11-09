@@ -26,7 +26,7 @@ jobs:
             --root-dir ${{ github.workspace }}
             --remap "^https://github\.com/framerslab/agentos-skills-registry/(blob|tree)/master/ file://${{ github.workspace }}/"
             --exclude-path CHANGELOG.md
-            './*.md' './.github/**/*.md'
+            './*.md' './.github/**/*.md' './.github/ISSUE_TEMPLATE/*.yml'
       # --include alone limits this step to the matching links: with no --exclude,
       # lychee skips every other link, and an --exclude would end that. This
       # repository's own links are checked offline in the step above; the remap
